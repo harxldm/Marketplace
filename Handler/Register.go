@@ -17,6 +17,7 @@ func HashPassword(password string) (string, error) {
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var user model.User
+
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, "Error al decodificar el cuerpo de la solicitud", http.StatusBadRequest)

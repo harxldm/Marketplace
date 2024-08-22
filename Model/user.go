@@ -9,3 +9,8 @@ type User struct {
 	Rol          string    `gorm:"not null" json:"rol"`
 	Created_date time.Time `json:"created_Date"`
 }
+
+type Login struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
