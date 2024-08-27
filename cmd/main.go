@@ -48,6 +48,10 @@ func main() {
 	mux.HandleFunc("/register", handler.Register)
 	mux.HandleFunc("/login", handler.Login)
 	mux.Handle("/createProduct", middleware.AuthMiddleware(http.HandlerFunc(handler.NewProduct)))
+	mux.HandleFunc("/getAll", handler.GetAll)
+	mux.HandleFunc("/getById", handler.GetProductsBySellerID)
+
+	// mux.HandleFunc("/createProduct", handler.NewProduct)
 
 	log.Fatal(http.ListenAndServe(":8080", handleCORS(mux)))
 }

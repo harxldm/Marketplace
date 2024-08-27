@@ -70,3 +70,51 @@ func generateSKU(product model.Product) string {
 	rand.Seed(time.Now().UnixNano())
 	return fmt.Sprintf("%s-%d", product.Name[:3], rand.Intn(1000)) // Ejemplo: "PRO-123"
 }
+
+func GetAll(w http.ResponseWriter, r *http.Request) {
+	db := Storage.Pool()
+
+	// Instanciar el repositorio de productos
+	productRepo := Storage.NewPsqlProduct(db)
+
+	data, err := productRepo.GetAll()
+	if err != nil {
+		http.Error(w, "Hubo un problema al obtener todos los productos: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":  "ok",
+		"products": data,
+	})
+}
+
+func GetProductsBySellerID(w http.ResponseWriter, r *http.Request) {
+
+	// Obtener el `sellerID` del contexto de la solicitud
+	sellerID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		log.Println("Error al obtener el ID del vendedor desde el contexto")
+		http.Error(w, "No se pudo obtener el ID del vendedor", http.StatusUnauthorized)
+		return
+	}
+
+	// Instanciar el repositorio de productos
+	db := Storage.Pool()
+	productRepo := Storage.NewPsqlProduct(db)
+
+	// Obtener los productos por SellerID
+	products, err := productRepo.GetProductsBySellerID(sellerID)
+	if err != nil {
+		http.Error(w, "Hubo un problema al obtener los productos: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Enviar la respuesta en formato JSON
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":  "ok",
+		"products": products,
+	})
+}
