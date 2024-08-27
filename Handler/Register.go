@@ -4,11 +4,18 @@ import (
 	model "backend_en_go/Model"
 	"backend_en_go/Storage"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+func setupCORS(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
+}
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -16,16 +23,26 @@ func HashPassword(password string) (string, error) {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
+
+	setupCORS(w, r)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	var user model.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
+		log.Println("Error al decodificar el cuerpo de la solicitud:", err)
 		http.Error(w, "Error al decodificar el cuerpo de la solicitud", http.StatusBadRequest)
 		return
 	}
 
+	log.Println("Datos recibidos:", user)
+
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
+		log.Println("Error al hashear la contraseña:", err)
 		http.Error(w, "Error al hashear la contraseña", http.StatusInternalServerError)
 		return
 	}
@@ -42,6 +59,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	// Crear el usuario
 	err = userRepo.CreateUser(&user)
 	if err != nil {
+		log.Println("Error al registrar el usuario:", err)
 		http.Error(w, "Error al registrar el usuario: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

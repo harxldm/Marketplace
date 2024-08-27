@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+)
 
 type User struct {
 	UserID       uint      `gorm:"primaryKey"`
@@ -13,4 +17,13 @@ type User struct {
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Rol      string `json:"rol"`
+	UserID   int    `json:"user_id"`
+}
+
+type Claim struct {
+	Email  string `json:"email"`
+	Rol    string `json:"rol"`
+	UserID int    `json:"user_id"`
+	jwt.StandardClaims
 }
