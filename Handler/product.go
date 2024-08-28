@@ -72,6 +72,7 @@ func generateSKU(product model.Product) string {
 }
 
 func GetAll(w http.ResponseWriter, r *http.Request) {
+
 	db := Storage.Pool()
 
 	// Instanciar el repositorio de productos

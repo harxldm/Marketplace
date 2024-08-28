@@ -49,7 +49,10 @@ func main() {
 	mux.HandleFunc("/login", handler.Login)
 	mux.Handle("/createProduct", middleware.AuthMiddleware(http.HandlerFunc(handler.NewProduct)))
 	mux.HandleFunc("/getAll", handler.GetAll)
-	mux.HandleFunc("/getById", handler.GetProductsBySellerID)
+	mux.HandleFunc("/userExist", handler.UserExist)
+
+	// mux.HandleFunc("/getById", handler.GetProductsBySellerID)
+	mux.Handle("/getProductsBySellerId", middleware.AuthMiddleware(http.HandlerFunc(handler.GetProductsBySellerID)))
 
 	// mux.HandleFunc("/createProduct", handler.NewProduct)
 

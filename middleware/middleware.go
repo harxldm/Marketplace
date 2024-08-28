@@ -1,46 +1,44 @@
 package middleware
 
 import (
+	authorization "backend_en_go/Authorization"
 	"context"
 	"net/http"
 	"strings"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Excluir la ruta /getById de la autenticación
+		if r.URL.Path == "/getById" && r.Method == "GET" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if r.URL.Path == "/createProducts" && r.Method == "POST" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Obtener el token del encabezado Authorization
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Token no proporcionado", http.StatusUnauthorized)
+			http.Error(w, "No autorizado", http.StatusUnauthorized)
 			return
 		}
 
+		// Eliminar el prefijo "Bearer " si se está utilizando
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte("mi_clave_secreta"), nil
-		})
-
-		if err != nil || !token.Valid {
-			http.Error(w, "Token inválido", http.StatusUnauthorized)
+		// Validar y decodificar el token
+		claims, err := authorization.ValidateToken(tokenString)
+		if err != nil {
+			http.Error(w, "No autorizado", http.StatusUnauthorized)
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
-			http.Error(w, "No se pudieron extraer las reclamaciones del token", http.StatusUnauthorized)
-			return
-		}
-
-		userID, ok := claims["userID"].(float64)
-		if !ok {
-			http.Error(w, "No se pudo obtener el ID del usuario del token", http.StatusUnauthorized)
-			return
-		}
-
-		// Coloca el userID en el contexto de la solicitud
-		ctx := context.WithValue(r.Context(), "userID", int(userID))
+		// Colocar el userID en el contexto de la solicitud
+		ctx := context.WithValue(r.Context(), "userID", claims.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
